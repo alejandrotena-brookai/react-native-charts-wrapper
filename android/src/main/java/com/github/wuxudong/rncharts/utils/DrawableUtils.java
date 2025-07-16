@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import android.util.Base64;
+import android.content.res.AssetManager;
 
 public class DrawableUtils {
     public static Drawable drawableFromUrl(String url, final int width, final int height) {
