@@ -122,15 +122,16 @@ class LineDataExtract : DataExtract {
                     let bundle = icon["bundle"];
 
                     let uiImage = RCTConvert.uiImage(bundle.dictionaryObject);
-                    let width = CGFloat(icon["width"].numberValue)/4;
-                    let height = CGFloat(icon["height"].numberValue)/4;
+                    // let width = CGFloat(icon["width"].numberValue)/4;
+                    // let height = CGFloat(icon["height"].numberValue)/4;
 
-                    if let image = uiImage {
-                        let realIconImage = resizeImage(image: image, width: width, height: height);
-                        entry = ChartDataEntry(x: x, y: dict["y"].doubleValue, icon: realIconImage);
-                    } else {
-                        entry = ChartDataEntry(x: x, y: dict["y"].doubleValue, icon: uiImage);
-                    }
+                    // if let image = uiImage {
+                    //     let realIconImage = resizeImage(image: image, width: width, height: height);
+                    //     entry = ChartDataEntry(x: x, y: dict["y"].doubleValue, icon: realIconImage);
+                    // } else {
+                    //     entry = ChartDataEntry(x: x, y: dict["y"].doubleValue, icon: uiImage);
+                    // }
+                    entry = ChartDataEntry(x: x, y: dict["y"].doubleValue, icon: uiImage);
 
 
                 } else {
