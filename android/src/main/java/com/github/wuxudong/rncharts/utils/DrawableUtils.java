@@ -54,7 +54,9 @@ public class DrawableUtils {
                 x = BitmapFactory.decodeStream(input);
             }
             
-            return new BitmapDrawable(Resources.getSystem(), Bitmap.createScaledBitmap(x, width, height, true));
+            // Skip resizing to avoid blurry icons - same fix as iOS
+            // return new BitmapDrawable(Resources.getSystem(), Bitmap.createScaledBitmap(x, width, height, true));
+            return new BitmapDrawable(Resources.getSystem(), x);
         } catch(Exception e) {
             e.printStackTrace();
             return new ShapeDrawable();
