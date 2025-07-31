@@ -54,18 +54,23 @@ public class DrawableUtils {
                 x = BitmapFactory.decodeStream(input);
             }
             
-            // Apply density-aware scaling to maintain icon visibility without blur
-            // Use a scale factor instead of exact dimensions to preserve quality
-            float scaleFactor = 2.0f; // Adjust this value based on your icon sizes
+            // Scale the bitmap using high-quality filtering to avoid blur
+            // Create a new bitmap with the desired size
+            Bitmap scaledBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            android.graphics.Canvas canvas = new android.graphics.Canvas(scaledBitmap);
             
-            BitmapDrawable drawable = new BitmapDrawable(Resources.getSystem(), x);
+            // Use high-quality paint settings for scaling
+            android.graphics.Paint paint = new android.graphics.Paint();
+            paint.setAntiAlias(true);
+            paint.setFilterBitmap(true);
+            paint.setDither(true);
             
-            // Set bounds to control display size without actually resizing the bitmap
-            int scaledWidth = (int)(x.getWidth() * scaleFactor);
-            int scaledHeight = (int)(x.getHeight() * scaleFactor);
-            drawable.setBounds(0, 0, scaledWidth, scaledHeight);
+            // Draw the original bitmap scaled to fit the new size
+            android.graphics.Rect srcRect = new android.graphics.Rect(0, 0, x.getWidth(), x.getHeight());
+            android.graphics.Rect dstRect = new android.graphics.Rect(0, 0, width, height);
+            canvas.drawBitmap(x, srcRect, dstRect, paint);
             
-            return drawable;
+            return new BitmapDrawable(Resources.getSystem(), scaledBitmap);
         } catch(Exception e) {
             e.printStackTrace();
             return new ShapeDrawable();
