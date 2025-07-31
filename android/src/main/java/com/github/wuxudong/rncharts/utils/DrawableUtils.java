@@ -54,9 +54,18 @@ public class DrawableUtils {
                 x = BitmapFactory.decodeStream(input);
             }
             
-            // Skip resizing to avoid blurry icons - same fix as iOS
-            // return new BitmapDrawable(Resources.getSystem(), Bitmap.createScaledBitmap(x, width, height, true));
-            return new BitmapDrawable(Resources.getSystem(), x);
+            // Apply density-aware scaling to maintain icon visibility without blur
+            // Use a scale factor instead of exact dimensions to preserve quality
+            float scaleFactor = 2.0f; // Adjust this value based on your icon sizes
+            
+            BitmapDrawable drawable = new BitmapDrawable(Resources.getSystem(), x);
+            
+            // Set bounds to control display size without actually resizing the bitmap
+            int scaledWidth = (int)(x.getWidth() * scaleFactor);
+            int scaledHeight = (int)(x.getHeight() * scaleFactor);
+            drawable.setBounds(0, 0, scaledWidth, scaledHeight);
+            
+            return drawable;
         } catch(Exception e) {
             e.printStackTrace();
             return new ShapeDrawable();
