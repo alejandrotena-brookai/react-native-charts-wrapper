@@ -36,17 +36,24 @@ public class DrawableUtils {
             
             String urlString = strings[0];
             
-            // Handle data URLs
+            // Handle data URLs (typically in release mode due to RN bug)
             if (urlString.startsWith("data:")) {
                 String base64 = urlString.substring(urlString.indexOf(",") + 1);
                 byte[] decodedString = Base64.decode(base64, Base64.DEFAULT);
-                x = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                
+                // For base64 images, use higher quality decoding options
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                options.inDither = false;
+                options.inScaled = false;
+                
+                x = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
             }
             // Handle file URLs
             else if (urlString.startsWith("file://")) {
                 x = BitmapFactory.decodeFile(urlString.replace("file://", ""));
             }
-            // Handle HTTP URLs
+            // Handle HTTP URLs (typically in debug mode)
             else {
                 HttpURLConnection connection = (HttpURLConnection) new URL(urlString).openConnection();
                 connection.connect();
@@ -54,23 +61,17 @@ public class DrawableUtils {
                 x = BitmapFactory.decodeStream(input);
             }
             
-            // Scale the bitmap using high-quality filtering to avoid blur
-            // Create a new bitmap with the desired size
-            Bitmap scaledBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-            android.graphics.Canvas canvas = new android.graphics.Canvas(scaledBitmap);
+            // For data URLs (release mode), the images are already at the correct density
+            // from React Native's Image.resolveAssetSource, so don't scale them
+            if (urlString.startsWith("data:")) {
+                // Simply return the drawable without any scaling
+                // The width/height from JS already accounts for screen density
+                return new BitmapDrawable(Resources.getSystem(), x);
+            }
             
-            // Use high-quality paint settings for scaling
-            android.graphics.Paint paint = new android.graphics.Paint();
-            paint.setAntiAlias(true);
-            paint.setFilterBitmap(true);
-            paint.setDither(true);
-            
-            // Draw the original bitmap scaled to fit the new size
-            android.graphics.Rect srcRect = new android.graphics.Rect(0, 0, x.getWidth(), x.getHeight());
-            android.graphics.Rect dstRect = new android.graphics.Rect(0, 0, width, height);
-            canvas.drawBitmap(x, srcRect, dstRect, paint);
-            
-            return new BitmapDrawable(Resources.getSystem(), scaledBitmap);
+            // For other URLs (debug mode), use the previous scaling approach
+            // that was working well in debug
+            return new BitmapDrawable(Resources.getSystem(), Bitmap.createScaledBitmap(x, width, height, true));
         } catch(Exception e) {
             e.printStackTrace();
             return new ShapeDrawable();
