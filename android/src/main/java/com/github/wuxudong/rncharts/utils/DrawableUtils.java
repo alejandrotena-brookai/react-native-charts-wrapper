@@ -54,14 +54,19 @@ public class DrawableUtils {
                 x = BitmapFactory.decodeStream(input);
             }
             
-            // Debug: Log the bitmap and requested dimensions
-            System.out.println("DrawableUtils: URL type: " + (urlString.startsWith("data:") ? "base64" : "http/file"));
-            System.out.println("DrawableUtils: Bitmap size: " + x.getWidth() + "x" + x.getHeight());
-            System.out.println("DrawableUtils: Requested size: " + width + "x" + height);
+            // Calculate size ratio to determine if scaling is needed
+            float widthRatio = (float) x.getWidth() / width;
+            float heightRatio = (float) x.getHeight() / height;
             
-            // Skip resizing to avoid blurry icons - same fix as iOS
-            // return new BitmapDrawable(Resources.getSystem(), Bitmap.createScaledBitmap(x, width, height, true));
-            return new BitmapDrawable(Resources.getSystem(), x);
+            // If the image is significantly smaller (less than 70% of requested size), scale it
+            if (widthRatio < 0.7f || heightRatio < 0.7f) {
+                // For small images, we need to scale them up
+                // Accept some blur rather than having tiny icons
+                return new BitmapDrawable(Resources.getSystem(), Bitmap.createScaledBitmap(x, width, height, true));
+            } else {
+                // Image is close to requested size, use it as-is to avoid blur
+                return new BitmapDrawable(Resources.getSystem(), x);
+            }
         } catch(Exception e) {
             e.printStackTrace();
             return new ShapeDrawable();
