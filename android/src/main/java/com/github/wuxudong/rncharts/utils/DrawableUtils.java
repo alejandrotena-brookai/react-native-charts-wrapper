@@ -36,24 +36,17 @@ public class DrawableUtils {
             
             String urlString = strings[0];
             
-            // Handle data URLs (typically in release mode due to RN bug)
+            // Handle data URLs
             if (urlString.startsWith("data:")) {
                 String base64 = urlString.substring(urlString.indexOf(",") + 1);
                 byte[] decodedString = Base64.decode(base64, Base64.DEFAULT);
-                
-                // For base64 images, use higher quality decoding options
-                BitmapFactory.Options options = new BitmapFactory.Options();
-                options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-                options.inDither = false;
-                options.inScaled = false;
-                
-                x = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
+                x = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
             }
             // Handle file URLs
             else if (urlString.startsWith("file://")) {
                 x = BitmapFactory.decodeFile(urlString.replace("file://", ""));
             }
-            // Handle HTTP URLs (typically in debug mode)
+            // Handle HTTP URLs
             else {
                 HttpURLConnection connection = (HttpURLConnection) new URL(urlString).openConnection();
                 connection.connect();
@@ -61,17 +54,14 @@ public class DrawableUtils {
                 x = BitmapFactory.decodeStream(input);
             }
             
-            // For data URLs (release mode), the images are already at the correct density
-            // from React Native's Image.resolveAssetSource, so don't scale them
-            if (urlString.startsWith("data:")) {
-                // Simply return the drawable without any scaling
-                // The width/height from JS already accounts for screen density
-                return new BitmapDrawable(Resources.getSystem(), x);
-            }
+            // Debug: Log the bitmap and requested dimensions
+            System.out.println("DrawableUtils: URL type: " + (urlString.startsWith("data:") ? "base64" : "http/file"));
+            System.out.println("DrawableUtils: Bitmap size: " + x.getWidth() + "x" + x.getHeight());
+            System.out.println("DrawableUtils: Requested size: " + width + "x" + height);
             
-            // For other URLs (debug mode), use the previous scaling approach
-            // that was working well in debug
-            return new BitmapDrawable(Resources.getSystem(), Bitmap.createScaledBitmap(x, width, height, true));
+            // Skip resizing to avoid blurry icons - same fix as iOS
+            // return new BitmapDrawable(Resources.getSystem(), Bitmap.createScaledBitmap(x, width, height, true));
+            return new BitmapDrawable(Resources.getSystem(), x);
         } catch(Exception e) {
             e.printStackTrace();
             return new ShapeDrawable();
