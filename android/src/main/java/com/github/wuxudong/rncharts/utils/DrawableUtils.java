@@ -29,53 +29,71 @@ public class DrawableUtils {
     static class DrawableLoadingAsyncTask extends AsyncTask<String, Void, Drawable> {
         @Override
         protected Drawable doInBackground(String... strings) {
-        try {
-            Bitmap x;
-            int width = Integer.parseInt(strings[1]);
-            int height = Integer.parseInt(strings[2]);
-            
-            String urlString = strings[0];
-            
-            // Handle data URLs
-            if (urlString.startsWith("data:")) {
-                String base64 = urlString.substring(urlString.indexOf(",") + 1);
-                byte[] decodedString = Base64.decode(base64, Base64.DEFAULT);
-                x = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+            try {
+                Bitmap bitmap;
+                int requestedWidth = Integer.parseInt(strings[1]);
+                int requestedHeight = Integer.parseInt(strings[2]);
+                String urlString = strings[0];
+                
+                Resources resources = Resources.getSystem();
+                float density = resources.getDisplayMetrics().density;
+                
+                // Handle data URLs
+                if (urlString.startsWith("data:")) {
+                    String base64 = urlString.substring(urlString.indexOf(",") + 1);
+                    byte[] decodedString = Base64.decode(base64, Base64.DEFAULT);
+                    
+                    // Decode without any scaling first
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inScaled = false;
+                    bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
+                    
+                    if (bitmap != null) {
+                        // For data URLs, always scale to match device density
+                        // The requested dimensions are in dp, convert to pixels
+                        int targetPixelWidth = Math.round(requestedWidth * density);
+                        int targetPixelHeight = Math.round(requestedHeight * density);
+                        
+                        // Always scale data URL images to the correct pixel size
+                        bitmap = Bitmap.createScaledBitmap(bitmap, targetPixelWidth, targetPixelHeight, true);
+                    }
+                }
+                // Handle file URLs
+                else if (urlString.startsWith("file://")) {
+                    bitmap = BitmapFactory.decodeFile(urlString.replace("file://", ""));
+                }
+                // Handle HTTP URLs
+                else {
+                    HttpURLConnection connection = (HttpURLConnection) new URL(urlString).openConnection();
+                    connection.connect();
+                    InputStream input = connection.getInputStream();
+                    bitmap = BitmapFactory.decodeStream(input);
+                }
+                
+                if (bitmap == null) {
+                    return new ShapeDrawable();
+                }
+                
+                // Create drawable
+                BitmapDrawable drawable = new BitmapDrawable(resources, bitmap);
+                
+                // Only set target density for non-data URLs
+                // Data URLs have already been scaled to the correct pixel size
+                if (!urlString.startsWith("data:")) {
+                    drawable.setTargetDensity(resources.getDisplayMetrics());
+                }
+                
+                return drawable;
+                
+            } catch(Exception e) {
+                e.printStackTrace();
+                return new ShapeDrawable();
             }
-            // Handle file URLs
-            else if (urlString.startsWith("file://")) {
-                x = BitmapFactory.decodeFile(urlString.replace("file://", ""));
-            }
-            // Handle HTTP URLs
-            else {
-                HttpURLConnection connection = (HttpURLConnection) new URL(urlString).openConnection();
-                connection.connect();
-                InputStream input = connection.getInputStream();
-                x = BitmapFactory.decodeStream(input);
-            }
-            
-            // Calculate size ratio to determine if scaling is needed
-            float widthRatio = (float) x.getWidth() / width;
-            float heightRatio = (float) x.getHeight() / height;
-            
-            // If the image is significantly smaller (less than 70% of requested size), scale it
-            if (widthRatio < 0.7f || heightRatio < 0.7f) {
-                // For small images, we need to scale them up
-                // Accept some blur rather than having tiny icons
-                return new BitmapDrawable(Resources.getSystem(), Bitmap.createScaledBitmap(x, width, height, true));
-            } else {
-                // Image is close to requested size, use it as-is to avoid blur
-                return new BitmapDrawable(Resources.getSystem(), x);
-            }
-        } catch(Exception e) {
-            e.printStackTrace();
-            return new ShapeDrawable();
         }
-    }
-
+        
         @Override
         protected void onPostExecute(Drawable drawable) {
             super.onPostExecute(drawable);
         }
-    };
+    }
 }
