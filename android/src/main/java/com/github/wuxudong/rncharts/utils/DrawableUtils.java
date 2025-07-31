@@ -43,19 +43,26 @@ public class DrawableUtils {
                     String base64 = urlString.substring(urlString.indexOf(",") + 1);
                     byte[] decodedString = Base64.decode(base64, Base64.DEFAULT);
                     
-                    // Decode without any scaling first
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inScaled = false;
-                    bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
+                    // Decode base64 with options for better quality
+                    BitmapFactory.Options decodeOptions = new BitmapFactory.Options();
+                    decodeOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                    decodeOptions.inScaled = false;
+                    decodeOptions.inDither = false;
+                    
+                    bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, decodeOptions);
                     
                     if (bitmap != null) {
-                        // For data URLs, always scale to match device density
-                        // The requested dimensions are in dp, convert to pixels
-                        int targetPixelWidth = Math.round(requestedWidth * density);
-                        int targetPixelHeight = Math.round(requestedHeight * density);
+                        // Check if scaling is needed
+                        // Don't scale if the image is already close to the requested size
+                        float scaleFactorX = (float) requestedWidth / bitmap.getWidth();
+                        float scaleFactorY = (float) requestedHeight / bitmap.getHeight();
                         
-                        // Always scale data URL images to the correct pixel size
-                        bitmap = Bitmap.createScaledBitmap(bitmap, targetPixelWidth, targetPixelHeight, true);
+                        // Only scale if the difference is significant (more than 30%)
+                        if (Math.abs(scaleFactorX - 1.0f) > 0.3f || Math.abs(scaleFactorY - 1.0f) > 0.3f) {
+                            // Use Bitmap.createScaledBitmap with filter=false for sharper scaling
+                            // This might create some aliasing but will be less blurry
+                            bitmap = Bitmap.createScaledBitmap(bitmap, requestedWidth, requestedHeight, false);
+                        }
                     }
                 }
                 // Handle file URLs
@@ -77,8 +84,8 @@ public class DrawableUtils {
                 // Create drawable
                 BitmapDrawable drawable = new BitmapDrawable(resources, bitmap);
                 
-                // Only set target density for non-data URLs
-                // Data URLs have already been scaled to the correct pixel size
+                // Set target density for URLs that haven't been manually scaled
+                // Skip for data URLs (already scaled)
                 if (!urlString.startsWith("data:")) {
                     drawable.setTargetDensity(resources.getDisplayMetrics());
                 }
@@ -96,4 +103,4 @@ public class DrawableUtils {
             super.onPostExecute(drawable);
         }
     }
-}
+}a
