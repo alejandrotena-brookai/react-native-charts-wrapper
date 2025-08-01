@@ -14,7 +14,6 @@ import com.github.wuxudong.rncharts.charts.LineChartManager;
 import com.github.wuxudong.rncharts.charts.PieChartManager;
 import com.github.wuxudong.rncharts.charts.RadarChartManager;
 import com.github.wuxudong.rncharts.charts.ScatterChartManager;
-import com.github.wuxudong.rncharts.utils.DrawableUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,8 +23,6 @@ public class MPAndroidChartPackage implements ReactPackage {
 
     @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
-        // Initialize DrawableUtils with the application context for asset loading
-        DrawableUtils.setApplicationContext(reactContext);
         return Arrays.asList();
     }
 
