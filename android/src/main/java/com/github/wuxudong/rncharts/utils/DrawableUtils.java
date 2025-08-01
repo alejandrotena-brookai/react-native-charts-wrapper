@@ -41,6 +41,14 @@ public class DrawableUtils {
                 String base64 = urlString.substring(urlString.indexOf(",") + 1);
                 byte[] decodedString = Base64.decode(base64, Base64.DEFAULT);
                 x = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                // The decoded bitmap has the raw pixel dimensions, e.g., 120px.
+                // We calculate the scale factor (e.g., 120px / 40dp = 3.0f)
+                if (width > 0) {
+                    float scale = (float) x.getWidth() / width;
+                    // We set the density, informing Android this is a high-res asset.
+                    // 160 is the baseline density for mdpi (1x).
+                    x.setDensity((int) (scale * 160f));
+                }
             }
             // Handle file URLs
             else if (urlString.startsWith("file://")) {
@@ -54,8 +62,8 @@ public class DrawableUtils {
                 x = BitmapFactory.decodeStream(input);
             }
             
-            return new BitmapDrawable(Resources.getSystem(), Bitmap.createScaledBitmap(x, width, height, true));
-            //return new BitmapDrawable(Resources.getSystem(), x);
+            //return new BitmapDrawable(Resources.getSystem(), Bitmap.createScaledBitmap(x, width, height, true));
+            return new BitmapDrawable(Resources.getSystem(), x);
         } catch(Exception e) {
             e.printStackTrace();
             return new ShapeDrawable();
