@@ -53,8 +53,15 @@ public class DrawableUtils {
                 InputStream input = connection.getInputStream();
                 x = BitmapFactory.decodeStream(input);
             }
-            
-            return new BitmapDrawable(Resources.getSystem(), Bitmap.createScaledBitmap(x, width, height, true));
+            System.out.println( "Drawable Utils passed height:" + height);
+            System.out.println( "Drawable Utils passed width:" + width);
+            System.out.println( "Drawable Utils height:" + x.getHeight());
+            System.out.println( "Drawable Utils width:" + x.getWidth());
+            System.out.println( "Drawable Utils density:" + x.getDensity());
+            System.out.println( "Drawable Utils config:" + x.getConfig().toString());
+
+
+            return new BitmapDrawable(Resources.getSystem(), Bitmap.createScaledBitmap(x, width, height, false));
         } catch(Exception e) {
             e.printStackTrace();
             return new ShapeDrawable();
