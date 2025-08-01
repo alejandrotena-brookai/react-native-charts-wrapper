@@ -31,8 +31,8 @@ public class DrawableUtils {
         protected Drawable doInBackground(String... strings) {
         try {
             Bitmap x;
-            int width = Integer.parseInt(strings[1]);
-            int height = Integer.parseInt(strings[2]);
+            int requestedWidth = Integer.parseInt(strings[1]);
+            int requestedHeight = Integer.parseInt(strings[2]);
             
             String urlString = strings[0];
             
@@ -53,15 +53,22 @@ public class DrawableUtils {
                 InputStream input = connection.getInputStream();
                 x = BitmapFactory.decodeStream(input);
             }
-            System.out.println( "Drawable Utils passed height:" + height);
-            System.out.println( "Drawable Utils passed width:" + width);
-            System.out.println( "Drawable Utils height:" + x.getHeight());
-            System.out.println( "Drawable Utils width:" + x.getWidth());
-            System.out.println( "Drawable Utils density:" + x.getDensity());
-            System.out.println( "Drawable Utils config:" + x.getConfig().toString());
+            // Use original dimensions if they're larger than requested
+            // This preserves quality for high-DPI assets
+            int finalWidth = Math.max(x.getWidth(), requestedWidth);
+            int finalHeight = Math.max(x.getHeight(), requestedHeight);
 
+            System.out.println("Drawable Utils requested width: " + requestedWidth + ", height: " + requestedHeight);
+            System.out.println("Drawable Utils original width: " + x.getWidth() + ", height: " + x.getHeight());
+            System.out.println("Drawable Utils final width: " + finalWidth + ", height: " + finalHeight);
 
-            return new BitmapDrawable(Resources.getSystem(), Bitmap.createScaledBitmap(x, width, height, false));
+            // Don't scale if original is already the right size or smaller
+            if (x.getWidth() == finalWidth && x.getHeight() == finalHeight) {
+                return new BitmapDrawable(Resources.getSystem(), x);
+            }
+
+            return new BitmapDrawable(Resources.getSystem(),
+                    Bitmap.createScaledBitmap(x, finalWidth, finalHeight, true)); // Use true for better quality
         } catch(Exception e) {
             e.printStackTrace();
             return new ShapeDrawable();
